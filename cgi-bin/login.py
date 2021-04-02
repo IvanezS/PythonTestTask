@@ -106,6 +106,7 @@ if userlogin is None or temp_user is None:
                 pattern = SuccessLoginView(temp_user['name'])
         else:
             errorMessage = 'Не найден такой пользователь'
+            
             pattern = LoginView(errorMessage)
     else:
         pattern = LoginView(errorMessage)

@@ -19,7 +19,7 @@ class FileUserRepository(object):
             with open(self.USER_PATH, 'r', encoding='utf-8'):
                 pass
         except FileNotFoundError:
-            with open(self.USER_PATH, 'w', encoding='utf-8') as f:
+            with open(self.USER_PATH, 'w+', encoding='utf-8') as f:
                 json.dump({}, f)
         us = self.get_all()        
         if len(us) == 0:
@@ -32,7 +32,7 @@ class FileUserRepository(object):
         """Регистриует пользователя. Возвращает True при успешной регистрации"""
         #if self.getUserByUserId(user.d[]):
         #    return False  # Такой пользователь существует
-        with open(self.USER_PATH, 'w', encoding='utf-8') as f:
+        with open(self.USER_PATH, 'w+', encoding='utf-8') as f:
             json.dump(user, f)
         return True
         

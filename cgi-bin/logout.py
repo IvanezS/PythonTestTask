@@ -38,7 +38,6 @@ def LoginView():
         </body>
         </html>
     '''
-
 import cgi
 import html
 import sys

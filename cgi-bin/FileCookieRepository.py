@@ -18,7 +18,7 @@ class FileCookieRepository(object):
             with open(self.COOKIES_PATH, 'r', encoding='utf-8'):
                 pass
         except FileNotFoundError:
-            with open(self.COOKIES_PATH, 'w', encoding='utf-8') as f:
+            with open(self.COOKIES_PATH, 'w+', encoding='utf-8') as f:
                 json.dump({}, f)
 
     
@@ -29,7 +29,7 @@ class FileCookieRepository(object):
             cookies = json.load(f)
         cookie = str(time.time()) + str(random.randrange(10**14))  # Генерируем уникальную куку для пользователя
         cookies[cookie] = userlogin
-        with open(self.COOKIES_PATH, 'w', encoding='utf-8') as f:
+        with open(self.COOKIES_PATH, 'w+', encoding='utf-8') as f:
             json.dump(cookies, f)
         return cookie
     
@@ -38,7 +38,7 @@ class FileCookieRepository(object):
         with open(self.COOKIES_PATH, 'r', encoding='utf-8') as f:
             cookies = json.load(f)
         del cookies[cookie]
-        with open(self.COOKIES_PATH, 'w', encoding='utf-8') as f:
+        with open(self.COOKIES_PATH, 'w+', encoding='utf-8') as f:
             json.dump(cookies, f)
         return True
 
