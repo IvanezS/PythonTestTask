@@ -13,6 +13,7 @@ RUN dos2unix /var/www/cgi-bin/logout.py
 RUN dos2unix /var/www/cgi-bin/user.py
 RUN dos2unix /var/www/cgi-bin/FileCookieRepository.py
 RUN dos2unix /var/www/cgi-bin/FileUserRepository.py
+RUN dos2unix /var/www/cgi-bin/FileAntiBruteforceRepo.py
 RUN dos2unix /var/www/cgi-bin/UserClass.py
 
 #Create files executable
@@ -21,6 +22,7 @@ RUN chmod +x /var/www/cgi-bin/logout.py
 RUN chmod +x /var/www/cgi-bin/user.py
 RUN chmod +x /var/www/cgi-bin/FileCookieRepository.py
 RUN chmod +x /var/www/cgi-bin/FileUserRepository.py
+RUN chmod +x /var/www/cgi-bin/FileAntiBruteforceRepo.py
 RUN chmod +x /var/www/cgi-bin/UserClass.py
 
 #Permitions for directories

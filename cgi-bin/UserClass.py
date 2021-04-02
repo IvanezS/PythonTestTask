@@ -5,7 +5,7 @@ class User:
     """Класс пользователя"""
 
     def __init__(self, login, password, name, surname, birth):
-        """Конструтор класса пользователя"""
+        """Конструктор класса пользователя"""
         self.d={}
         salt = os.urandom(64) # A new salt for this user
         key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)

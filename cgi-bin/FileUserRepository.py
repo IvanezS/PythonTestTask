@@ -24,47 +24,42 @@ class FileUserRepository(object):
         us = self.get_all()        
         if len(us) == 0:
             newUser=User("Vladimir", "1", "Vladimir", "Lenin", "2010-01-01")
-            self.create(newUser.d)
+            self.create(newUser.d, "Vladimir")
 
-    
-    
-    def create(self, user):
+       
+    def create(self, userDict, login):
         """Регистриует пользователя. Возвращает True при успешной регистрации"""
-        #if self.getUserByUserId(user.d[]):
-        #    return False  # Такой пользователь существует
+        users = self.get_all()
+        if login in users:
+           return False  # Такой пользователь существует
         with open(self.USER_PATH, 'w+', encoding='utf-8') as f:
-            json.dump(user, f)
+            json.dump(userDict, f)
         return True
         
-  
-    # Операции чтения
+      # Операции чтения
     def get_all(self):
         """Найти всех пользователей"""
         with open(self.USER_PATH, 'r', encoding='utf-8') as f:
             users = json.load(f)
         return users
     
-
     def get_by_name_and_password(self, login, password):
-        """Ищет пользователя по имени или по имени и паролю"""
-        with open(self.USER_PATH, 'r', encoding='utf-8') as f:
-            users = json.load(f)
-            for clue in users.keys():
-                if clue == login:
-                    salt =  b64decode(users[login]['salt'].encode('utf-8')) # Get the salt
-                    key = b64decode(users[login]['key'].encode('utf-8')) # Get the correct key
-                    new_key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
-                    if key == new_key:
-                        return True
+        """Ищет пользователя по имени и паролю"""
+        users = self.get_all()
+        for clue in users.keys():
+            if clue == login:
+                salt =  b64decode(users[login]['salt'].encode('utf-8')) # Get the salt
+                key = b64decode(users[login]['key'].encode('utf-8')) # Get the correct key
+                new_key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
+                if key == new_key:
+                    return True
         return False
 
     def getUserByUserLogin(self, login):
         """Найти пользователя по userId"""
         if login is None:
             raise TypeError
-        with open(self.USER_PATH, 'r', encoding='utf-8') as f:
-            users = json.load(f)
-        #for user in users and  (userId == users[UserId])  
+        users = self.get_all()
         x= users[login]
         return x
 

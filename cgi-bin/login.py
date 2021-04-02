@@ -19,7 +19,7 @@ def SuccessLoginView(username):
             </html>
     ''' % username
 
-def LoginView(errorMessage):
+def LoginView(errorMessage, clientIP):
     return '''
     <!DOCTYPE HTML>
         <html>
@@ -30,6 +30,7 @@ def LoginView(errorMessage):
         <body>
             <h1>АВТОРИЗАЦИЯ ПОЛЬЗОВАТЕЛЯ</h1>
             <p>Здравствуйте! Введите свои имя пользователя и пароль, чтобы получить доступ к данным</p>
+            <p>Ваш IP-адрес: %s</p>''' % clientIP +'''
             <hr/>
             <form action="/cgi-bin/login.py" method = "POST">
 
@@ -49,6 +50,7 @@ def LoginView(errorMessage):
         </html>
     ''' % errorMessage
 
+import os
 import cgi
 import html
 import sys
@@ -57,10 +59,12 @@ sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
 
 from FileUserRepository import FileUserRepository
 from FileCookieRepository import FileCookieRepository
+from FileAntiBruteforceRepo import FileAntiBruteforceRepo
 
-#Создаём экземпляры репозитория пользователей и кук для работы с файлом. Абстрагируемся от реализации методов работы в этом классе
+#Создаём экземпляры репозитория пользователей, кук и счётчиков для работы с файлом. Абстрагируемся от реализации методов работы в этом классе
 user_repo = FileUserRepository() 
 cookie_repo = FileCookieRepository() 
+counter_repo = FileAntiBruteforceRepo() 
 
 session = cookie_repo.get_session()
 
@@ -84,33 +88,44 @@ if userlogin is None or temp_user is None:
     form = cgi.FieldStorage()
     action = form.getfirst("action", "")
 
-    errorMessage = ''
 
+    #Прошла ли 1 мин?
+    if counter_repo.checkTime(os.environ["REMOTE_ADDR"]):
+        counter_repo.delete(os.environ["REMOTE_ADDR"])
+   
+
+    errorMessage = ''
+    pattern = LoginView(errorMessage, os.environ["REMOTE_ADDR"])
     # Если пришли данные с формы
     if action == "login":
         
-        login = form.getfirst("login", "")
-        login = html.escape(login)
-        password = form.getfirst("password", "")
-        password = html.escape(password)
+        if counter_repo.update(os.environ["REMOTE_ADDR"], False) < 3:
 
-        # Проверим, существует ли такой пользователь
-        us = user_repo.get_by_name_and_password(login, password)
-        
-        if us:
-            cookie = cookie_repo.set_cookie(login)
-            print('Set-cookie: session={}'.format(cookie))
-            temp_user = user_repo.getUserByUserLogin(login)
-            if temp_user is not None:
-                # То считаем, что авторизовались
-                pattern = SuccessLoginView(temp_user['name'])
-        else:
-            errorMessage = 'Не найден такой пользователь'
+            login = form.getfirst("login", "")
+            login = html.escape(login)
+            password = form.getfirst("password", "")
+            password = html.escape(password)
+
+            # Проверим, существует ли такой пользователь
+            us = user_repo.get_by_name_and_password(login, password)
             
-            pattern = LoginView(errorMessage)
-    else:
-        pattern = LoginView(errorMessage)
-
+            if us:
+                cookie = cookie_repo.set_cookie(login)
+                print('Set-cookie: session={}'.format(cookie))
+                temp_user = user_repo.getUserByUserLogin(login)
+                if temp_user is not None:
+                    # То считаем, что авторизовались
+                    pattern = SuccessLoginView(temp_user['name'])
+            else:
+                errorMessage = 'Не найден такой пользователь, осталось %s попыток войти' %  str(4 - counter_repo.update(os.environ["REMOTE_ADDR"], True))
+                pattern = LoginView(errorMessage, os.environ["REMOTE_ADDR"])
+        else:
+            errorMessage = 'Вы исчерпали попытки войти. Повторно воспользоваться формой можно через 1 мин'
+            #Прошла ли 1 мин?
+            if counter_repo.checkTime(os.environ["REMOTE_ADDR"]):
+                counter_repo.delete(os.environ["REMOTE_ADDR"])
+                errorMessage = 'Теперь можно повторно пройти авторизацию'
+            pattern = LoginView(errorMessage, os.environ["REMOTE_ADDR"])
 
 # Выведем на экран
 print(pattern)
