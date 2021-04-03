@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 def SuccessLoginView(user):
-    x= """
+    return """
             <!DOCTYPE HTML>
             <html>
             <head>
@@ -19,7 +19,6 @@ def SuccessLoginView(user):
                 </body>
             </html>
     """
-    return x
 
 def LoginView():
     return '''
@@ -31,6 +30,7 @@ def LoginView():
         </head>
         <body>
             <h1>ИНФОРМАЦИЯ О ПОЛЬЗОВАТЕЛЕ</h1>
+            <p>Информация недоступна. Необходимо пройти авторизацию - нажмите на кнопку Войти</p>
             <hr/>
             <p><a href="/cgi-bin/login.py">Войти</a></p>
         </body>
@@ -44,31 +44,31 @@ import codecs
 sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
 
 from FileUserRepository import FileUserRepository
-from FileCookieRepository import FileCookieRepository
+from JWT import JWT_token_tool
 
 #Создаём экземпляры репозитория пользователей и кук для работы с файлом. Абстрагируемся от реализации методов работы в этом классе
 user_repo = FileUserRepository() 
-cookie_repo = FileCookieRepository() 
+jwt = JWT_token_tool()
 
-session = cookie_repo.get_session()
+# Первичная инициализация
+pattern = LoginView()
+result = False
 
-temp_user ={}
-pattern =''''''
+# Проверим токен и получим инфу из него (userId)
+result = jwt.CheckJWTtoken()
 
-# Ищем логин пользователя по переданной куке
-userlogin = cookie_repo.find_cookie(session)  
+# Получили userId, найдём по нему инфу о пользователе
+if result is not False:
 
-# Если логин найден, найдём по нему инфу о пользователе
-if userlogin is not None:
-    temp_user = user_repo.getUserByUserLogin(userlogin)
+    # Обновляем токен - типа обновляем срок действия токена
+    cookie = jwt.CreateJWTtoken(result['userId'])
+    print('Set-cookie: JWTtoken={}'.format(cookie))
+    
+    # Получаем пользователя
+    temp_user = user_repo.getUserByUserId(result['userId'])
     if temp_user is not None:
         # То считаем, что авторизовались
         pattern = SuccessLoginView(temp_user)
-
-# Если логин не найден или пользователь по логину не найден
-if userlogin is None or temp_user is None:
-    pattern = LoginView()
-
 
 # Выведем на экран
 print(pattern)

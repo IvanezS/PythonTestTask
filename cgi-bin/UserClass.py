@@ -9,12 +9,17 @@ class User:
         self.d={}
         salt = os.urandom(64) # A new salt for this user
         key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
-        self.d[login] = { # Store the salt and key
+        self.userid = b64encode(uuid.uuid4().bytes).decode('utf-8')
+        self.d[self.userid] = { # Store the salt and key
+            'login': login,
             'salt': b64encode(salt).decode('utf-8'),
             'key': b64encode(key).decode('utf-8'),
-            'userid' : b64encode(uuid.uuid4().bytes).decode('utf-8'),
             'name' : name,
             'surname' : surname,
             'birth' : birth
         }
+    
+    def getUserId(self):
+        """Получить userId пользователя"""
+        return self.userid
 

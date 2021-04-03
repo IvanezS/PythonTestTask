@@ -58,39 +58,38 @@ import codecs
 sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
 
 from FileUserRepository import FileUserRepository
-from FileCookieRepository import FileCookieRepository
 from FileAntiBruteforceRepo import FileAntiBruteforceRepo
+from JWT import JWT_token_tool
 
-#Создаём экземпляры репозитория пользователей, кук и счётчиков для работы с файлом. Абстрагируемся от реализации методов работы в этом классе
+#Создаём экземпляры репозитория пользователей и счётчиков для работы с файлом. Абстрагируемся от реализации методов работы в этом классе
 user_repo = FileUserRepository() 
-cookie_repo = FileCookieRepository() 
 counter_repo = FileAntiBruteforceRepo() 
+jwt = JWT_token_tool()
 
-session = cookie_repo.get_session()
+# Первичная инициализация
+pattern =''
 
-temp_user ={}
-pattern =''''''
+# Проверим токен и получим инфу из него (userId)
+result = jwt.CheckJWTtoken()
 
-# Ищем логин пользователя по переданной куке
-userlogin = cookie_repo.find_cookie(session)  
-
-# Если логин найден, найдём по нему инфу о пользователе
-if userlogin is not None:
-    temp_user = user_repo.getUserByUserLogin(userlogin)
+# Получили userId, найдём по нему инфу о пользователе
+if result is not False:
+    temp_user = user_repo.getUserByUserId(result['userId'])
     if temp_user is not None:
-        # То считаем, что авторизовались
+        # Считаем, что авторизовались
         pattern = SuccessLoginView(temp_user['name'])
+        # Обнулим счётчик попыток
+        counter_repo.delete(os.environ["REMOTE_ADDR"])
 
-# Если логин не найден или пользователь по логину не найден
-if userlogin is None or temp_user is None:
-
-
+# Если токен не прошёл валидацию или не проверялся
+else:
     form = cgi.FieldStorage()
     action = form.getfirst("action", "")
 
 
     #Прошла ли 1 мин?
     if counter_repo.checkTime(os.environ["REMOTE_ADDR"]):
+        # Обнулим счётчик попыток
         counter_repo.delete(os.environ["REMOTE_ADDR"])
    
 
@@ -99,7 +98,7 @@ if userlogin is None or temp_user is None:
     # Если пришли данные с формы
     if action == "login":
         
-        if counter_repo.update(os.environ["REMOTE_ADDR"], False) < 3:
+        if counter_repo.update(os.environ["REMOTE_ADDR"], False) < 4:
 
             login = form.getfirst("login", "")
             login = html.escape(login)
@@ -107,15 +106,21 @@ if userlogin is None or temp_user is None:
             password = html.escape(password)
 
             # Проверим, существует ли такой пользователь
-            us = user_repo.get_by_name_and_password(login, password)
+            userId = user_repo.get_by_name_and_password(login, password)
             
-            if us:
-                cookie = cookie_repo.set_cookie(login)
-                print('Set-cookie: session={}'.format(cookie))
-                temp_user = user_repo.getUserByUserLogin(login)
+            if userId is not None:
+
+                # Обновляем токен
+                cookie = jwt.CreateJWTtoken(userId)
+                print('Set-cookie: JWTtoken={}'.format(cookie))
+                
+                # Получаем пользователя
+                temp_user = user_repo.getUserByUserId(userId)
                 if temp_user is not None:
                     # То считаем, что авторизовались
                     pattern = SuccessLoginView(temp_user['name'])
+                    # Обнулим счётчик попыток
+                    counter_repo.delete(os.environ["REMOTE_ADDR"])
             else:
                 errorMessage = 'Не найден такой пользователь, осталось %s попыток войти' %  str(4 - counter_repo.update(os.environ["REMOTE_ADDR"], True))
                 pattern = LoginView(errorMessage, os.environ["REMOTE_ADDR"])

@@ -45,40 +45,31 @@ import codecs
 sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
 
 from FileUserRepository import FileUserRepository
-from FileCookieRepository import FileCookieRepository
+from JWT import JWT_token_tool
 
 #Создаём экземпляры репозитория пользователей и кук для работы с файлом. Абстрагируемся от реализации методов работы в этом классе
 user_repo = FileUserRepository() 
-cookie_repo = FileCookieRepository() 
+jwt = JWT_token_tool()
 
-session = cookie_repo.get_session()
+# Первичная инициализация
+pattern = LoginView()
 
-temp_user ={}
-pattern =''''''
+# Проверим токен и получим инфу из него (userId)
+result = jwt.CheckJWTtoken()
 
-# Ищем логин пользователя по переданной куке
-userlogin = cookie_repo.find_cookie(session)  
-
-# Если логин найден, найдём по нему инфу о пользователе
-if userlogin is not None:
-    temp_user = user_repo.getUserByUserLogin(userlogin)
+# Получили userId, найдём по нему инфу о пользователе
+if result is not False:
+    temp_user = user_repo.getUserByUserId(result['userId'])
     if temp_user is not None:
         form = cgi.FieldStorage()
         action = form.getfirst("action", "")
 
         # Если пришли данные с формы
         if action == "logout":
-            cookie = cookie_repo.set_cookie(userlogin)
-            print('Set-cookie: session={}'.format(cookie))
-            cookie_repo.delete_cookie(cookie)
+            print('Set-cookie: JWTtoken={}'.format("0"))
             pattern = LoginView()
-
         else:
             pattern = SuccessLoginView()
-
-# Если логин не найден или пользователь по логину не найден
-if userlogin is None or temp_user is None:
-    pattern = LoginView()
 
 # Выведем на экран
 print(pattern)
