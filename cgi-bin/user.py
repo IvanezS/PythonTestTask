@@ -7,33 +7,31 @@ def SuccessLoginView(user):
             <html>
             <head>
             <meta charset="utf-8">
-            <title>Login</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <title>ИНФОРМАЦИЯ О ПОЛЬЗОВАТЕЛЕ</title>
+            <link rel="stylesheet" href="../static/css/styles.css" type="text/css">
             </head>
             <body>
-                <h1>ИНФОРМАЦИЯ О ПОЛЬЗОВАТЕЛЕ</h1>
-                <hr/>
-                <p>Имя: %s</p>""" % user['name']+"""
-                <p>Фамилия: %s</p>""" % user['surname']+"""
-                <p>День рождения: %s</p>""" % user['birth']+"""
-                <p><a href="/cgi-bin/logout.py">Выйти</a></p>
-                </body>
+                <div class="main">
+                    <p class="sign" align="center">ИНФОРМАЦИЯ О ПОЛЬЗОВАТЕЛЕ</p>
+                    <p class = "comment">При простое более 1.5 минут сессия закончится</p>
+                    <hr/>
+                    <p class = "comment">Имя: %s</p>""" % user['name']+"""
+                    <p class = "comment">Фамилия: %s</p>""" % user['surname']+"""
+                    <p class = "comment">День рождения: %s</p>""" % user['birth']+"""
+                    <p align="center"><a class="exit" href="/cgi-bin/logout.py">Выйти</a></p>
+                </div>
+            </body>
+                
             </html>
     """
 
 def LoginView():
     return '''
-    <!DOCTYPE HTML>
         <html>
-        <head>
-        <meta charset="utf-8">
-        <title>Login</title>
-        </head>
-        <body>
-            <h1>ИНФОРМАЦИЯ О ПОЛЬЗОВАТЕЛЕ</h1>
-            <p>Информация недоступна. Необходимо пройти авторизацию - нажмите на кнопку Войти</p>
-            <hr/>
-            <p><a href="/cgi-bin/login.py">Войти</a></p>
-        </body>
+            <head>
+                <meta http-equiv="refresh" content="0;URL=http://localhost:8000/cgi-bin/login.py" />
+            </head>
         </html>
     ''' 
 

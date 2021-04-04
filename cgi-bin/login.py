@@ -7,14 +7,21 @@ def SuccessLoginView(username):
             <html>
             <head>
             <meta charset="utf-8">
-            <title>Login</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <title>АВТОРИЗАЦИЯ</title>
+            <link rel="stylesheet" href="../static/css/styles.css" type="text/css">
             </head>
             <body>
-                <h1>АВТОРИЗАЦИЯ ПОЛЬЗОВАТЕЛЯ</h1>
-                <p>Здравствуйте, %s! Вы успешно авторизовались</p>
-                <hr/>
-                <p><a href="/cgi-bin/logout.py">Выйти</a></p>
-                <p><a href="/cgi-bin/user.py">Посмотреть информацию о себе</a></p>
+                <div class="main">
+                    <p class="sign" align="center">АВТОРИЗАЦИЯ ПОЛЬЗОВАТЕЛЯ</p>
+                    <p class = "comment">Здравствуйте, %s! Вы успешно авторизовались</p>
+                    <hr/>
+                    
+                    
+                    <p align="center"><a class="info" href="/cgi-bin/user.py">Посмотреть информацию о себе</a></p>
+                    <p> </p>
+                    <p align="center"><a class="exit" href="/cgi-bin/logout.py">Выйти</a></p>
+                </div>
             </body>
             </html>
     ''' % username
@@ -25,27 +32,27 @@ def LoginView(errorMessage, clientIP):
         <html>
         <head>
         <meta charset="utf-8">
-        <title>Login</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>АВТОРИЗАЦИЯ</title>
+        <link rel="stylesheet" href="../static/css/styles.css" type="text/css">
         </head>
         <body>
-            <h1>АВТОРИЗАЦИЯ ПОЛЬЗОВАТЕЛЯ</h1>
-            <p>Здравствуйте! Введите свои имя пользователя и пароль, чтобы получить доступ к данным</p>
-            <p>Ваш IP-адрес: %s</p>''' % clientIP +'''
+            <div class="main">
+            <p class="sign" align="center">АВТОРИЗАЦИЯ ПОЛЬЗОВАТЕЛЯ</p>
+            <p class = "comment">Здравствуйте! Введите свои имя пользователя и пароль, чтобы получить доступ к данным</p>
+            <p class = "comment">Ваш IP-адрес: %s</p>''' % clientIP +'''
             <hr/>
-            <form action="/cgi-bin/login.py" method = "POST">
+            <form class="form1" action="/cgi-bin/login.py" method = "POST">
 
-                <p>Логин:</p>
-                <p><input type="text" name="login" /></p>
-                <p>Пароль:</p>
-                <p><input type="password" name="password" /></p>
-
+                <input class="un" align="center" type="text" name="login" placeholder="Логин"/>
+                <input class="pass" align="center" type="password" name="password" placeholder="Пароль"/>
                 <input type="hidden" name="action" value="login">
-                <p><input type="submit"/><p>
+                <input class="submit" align="center" type="submit" value = "Войти">
+                <p class = "errorMessage">%s</p>
             </form>
-            <font size="2" color="red">
-                %s
-            </font>
-
+            
+            
+            </div>
         </body>
         </html>
     ''' % errorMessage
@@ -105,27 +112,32 @@ else:
             password = form.getfirst("password", "")
             password = html.escape(password)
 
-            # Проверим, существует ли такой пользователь
-            userId = user_repo.get_by_name_and_password(login, password)
-            
-            if userId is not None:
-
-                # Обновляем токен
-                cookie = jwt.CreateJWTtoken(userId)
-                print('Set-cookie: JWTtoken={}'.format(cookie))
-                
-                # Получаем пользователя
-                temp_user = user_repo.getUserByUserId(userId)
-                if temp_user is not None:
-                    # То считаем, что авторизовались
-                    pattern = SuccessLoginView(temp_user['name'])
-                    # Обнулим счётчик попыток
-                    counter_repo.delete(os.environ["REMOTE_ADDR"])
-            else:
-                errorMessage = 'Не найден такой пользователь, осталось %s попыток войти' %  str(4 - counter_repo.update(os.environ["REMOTE_ADDR"], True))
+            # Проверка заполненности полей (лучше б, конечно, с фронта этим заниматься)
+            if login == '' or password == '':
+                errorMessage = 'Логин и пароль обязателены к заполнению'
                 pattern = LoginView(errorMessage, os.environ["REMOTE_ADDR"])
+            else:
+                # Проверим, существует ли такой пользователь
+                userId = user_repo.get_by_name_and_password(login, password)
+                
+                if userId is not None:
+
+                    # Обновляем токен
+                    cookie = jwt.CreateJWTtoken(userId)
+                    print('Set-cookie: JWTtoken={}'.format(cookie))
+                    
+                    # Получаем пользователя
+                    temp_user = user_repo.getUserByUserId(userId)
+                    if temp_user is not None:
+                        # То считаем, что авторизовались
+                        pattern = SuccessLoginView(temp_user['name'])
+                        # Обнулим счётчик попыток
+                        counter_repo.delete(os.environ["REMOTE_ADDR"])
+                else:
+                    errorMessage = 'Не найден такой пользователь, осталось %s попыток войти' %  str(5 - counter_repo.update(os.environ["REMOTE_ADDR"], True))
+                    pattern = LoginView(errorMessage, os.environ["REMOTE_ADDR"])
         else:
-            errorMessage = 'Вы исчерпали попытки войти. Повторно воспользоваться формой можно через 1 мин'
+            errorMessage = 'Вы исчерпали попытки. Попробуйте через минуту через 1 мин'
             #Прошла ли 1 мин?
             if counter_repo.checkTime(os.environ["REMOTE_ADDR"]):
                 counter_repo.delete(os.environ["REMOTE_ADDR"])

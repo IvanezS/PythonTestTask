@@ -2,42 +2,38 @@
 # -*- coding: utf-8 -*-
 
 def SuccessLoginView():
-    return '''
+    print('''
             <!DOCTYPE HTML>
             <html>
             <head>
             <meta charset="utf-8">
-            <title>Login</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <title>ЗАКОНЧИТЬ СЕАНС</title>
+            <link rel="stylesheet" href="../static/css/styles.css" type="text/css">
             </head>
             <body>
-                <h1>ЗАКОНЧИТЬ СЕАНС</h1>
-                <hr />
-                <p>Нажмите для подтверждения выхода на кнопку</p>
-                <form action="/cgi-bin/logout.py" method = "POST">
-                    <input type="hidden" name="action" value="logout">
-                    <p><input type="submit" value = "Выйти" /><p>
-                </form>
-                <a href = "/cgi-bin/user.py">Перейти к информации о пользователе</a>
+                <div class="main">
+                    <p class="sign" align="center">ЗАКОНЧИТЬ СЕАНС</p>
+                    <p class = "comment">Вы уверены, что хотите закончить сеанс?</p>
+                    <hr />
+                    <form action="/cgi-bin/logout.py" method = "POST">
+                        <input type="hidden" name="action" value="logout">
+                        <p align="center"><input class="exit" type="submit" value = "Выйти" /></p>
+                    </form>
+                    <p align="center"><a  class="info" href = "/cgi-bin/user.py">Отмена</a></p>
+                </div>
             </body>
             </html>
-    '''
+    ''')
 
 def LoginView():
-    return '''
-    <!DOCTYPE HTML>
+    print('''
         <html>
-        <head>
-        <meta charset="utf-8">
-        <title>Login</title>
-        </head>
-        <body>
-            <h1>ЗАКОНЧИТЬ СЕАНС</h1>
-            <p>Вы не авторизированы! </p>
-            <hr/>
-            <a href = "/cgi-bin/login.py">Перейти к странице авторизации</a>
-        </body>
+            <head>
+                <meta http-equiv="refresh" content="0;URL=http://localhost:8000/cgi-bin/login.py" />
+            </head>
         </html>
-    '''
+    ''')
 import cgi
 import html
 import sys
@@ -50,9 +46,6 @@ from JWT import JWT_token_tool
 #Создаём экземпляры репозитория пользователей и кук для работы с файлом. Абстрагируемся от реализации методов работы в этом классе
 user_repo = FileUserRepository() 
 jwt = JWT_token_tool()
-
-# Первичная инициализация
-pattern = LoginView()
 
 # Проверим токен и получим инфу из него (userId)
 result = jwt.CheckJWTtoken()
@@ -67,9 +60,10 @@ if result is not False:
         # Если пришли данные с формы
         if action == "logout":
             print('Set-cookie: JWTtoken={}'.format("0"))
-            pattern = LoginView()
-        else:
-            pattern = SuccessLoginView()
+            LoginView()
 
-# Выведем на экран
-print(pattern)
+        else:
+            SuccessLoginView()
+else:
+    LoginView()
+

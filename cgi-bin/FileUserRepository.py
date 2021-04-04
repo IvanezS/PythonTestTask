@@ -23,17 +23,25 @@ class FileUserRepository(object):
                 json.dump({}, f)
         us = self.get_all()        
         if len(us) == 0:
-            newUser=User("Vladimir", "1", "Vladimir", "Lenin", "2010-01-01")
-            self.create(newUser.d, newUser.getUserId())
-
-       
+            d={}
+            d.setdefault("w5e4iFi+T8u3TPCWuZdbIA==", { 
+                    'login': "Vladimir",
+                    'salt': "6hmCOAfwxD7XOt0rvxO+6a8TU/0L3WDYyjVesas4esjMNTFNxrQsmDCcY1Go1qj0EqLZshUUdQwEW8cC9BmwtQ==",
+                    'key': "MYlSH/R7GC+uKUxC3MbpXkXGge/VemHL5KvXvXIlJfk=",
+                    'name' : "Vladimir",
+                    'surname' : "Lenin",
+                    'birth' : "1870-04-22"
+            })
+            self.create(d, "w5e4iFi+T8u3TPCWuZdbIA==")
+           
     def create(self, userDict, userId):
         """Регистриует пользователя. Возвращает True при успешной регистрации"""
         users = self.get_all()
         if userId in users:
            return False  # Такой пользователь существует
+        users[userId] =  userDict[userId]  
         with open(self.USER_PATH, 'w+', encoding='utf-8') as f:
-            json.dump(userDict, f)
+            json.dump(users, f)
         return True
         
       # Операции чтения

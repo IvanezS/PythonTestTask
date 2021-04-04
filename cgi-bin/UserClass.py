@@ -19,7 +19,4 @@ class User:
             'birth' : birth
         }
     
-    def getUserId(self):
-        """Получить userId пользователя"""
-        return self.userid
 

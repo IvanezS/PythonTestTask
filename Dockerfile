@@ -4,6 +4,7 @@ RUN yum install python3 -y
 
 #Project files copy in directories
 COPY cgi-bin /var/www/cgi-bin
+COPY static /var/www/static
 COPY index.html /var/www/
 
 #Files was created in Windows - convert it
@@ -28,6 +29,7 @@ RUN chmod +x /var/www/cgi-bin/UserClass.py
 #Permitions for directories
 RUN chmod 777 /var/www
 RUN chmod 777 /var/www/cgi-bin
+RUN chmod 777 /var/www/static
 
 WORKDIR /var/www/
 

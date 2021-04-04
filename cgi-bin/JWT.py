@@ -19,7 +19,7 @@ class JWT_token_tool:
         """Создаём JWT токен и возвращаем его"""
 
         header = b'{"alg":"HS256","typ":"JWT"}'
-        payload = json.dumps({"userId":userid, "exp":(datetime.now() + timedelta(seconds=600)).strftime("%d/%m/%Y %H:%M:%S")}).encode('utf-8')
+        payload = json.dumps({"userId":userid, "exp":(datetime.now() + timedelta(seconds=90)).strftime("%d/%m/%Y %H:%M:%S")}).encode('utf-8')
         secretKey = b'SE'
 
         unsignedToken = urlsafe_b64encode(header) + b'.'+ urlsafe_b64encode(payload)
